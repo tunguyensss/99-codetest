@@ -1,0 +1,339 @@
+:root {
+  --primary-color: #646cff;
+  --bg-color: #0f0f13;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --input-bg: rgba(0, 0, 0, 0.2);
+  --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-color: #4ade80;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  overflow: hidden; /* For blob containment */
+}
+
+/* Background Animations */
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.background-blobs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  filter: blur(80px);
+  opacity: 0.6;
+  animation: float 10s infinite ease-in-out;
+}
+
+.blob-1 {
+  top: -10%;
+  left: -10%;
+  width: 50vw;
+  height: 50vw;
+  background: #4f46e5;
+  animation-delay: 0s;
+}
+
+.blob-2 {
+  bottom: -10%;
+  right: -10%;
+  width: 40vw;
+  height: 40vw;
+  background: #ec4899;
+  animation-delay: -2s;
+}
+
+.blob-3 {
+  top: 40%;
+  left: 40%;
+  width: 30vw;
+  height: 30vw;
+  background: #8b5cf6;
+  animation-delay: -5s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(30px, -30px);
+  }
+}
+
+/* Glassmorphism Card */
+.swap-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(to right, #fff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.card-header p {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Input Group */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.input-wrapper {
+  background: var(--input-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.input-wrapper:focus-within {
+  border-color: #6366f1;
+}
+
+.amount-input {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  width: 50%;
+  outline: none;
+}
+
+.amount-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.currency-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.currency-selector:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.currency-selector select {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  padding-right: 1rem; /* For custom arrow if added */
+  z-index: 2;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0; /* Hide default select but keep functionality */
+  top: 0;
+  left: 0;
+}
+
+/* We need to show the value manually or style the select properly to show specific text.
+   Since I hid the select opacity, I actually need to show a label. 
+   But react select value is tricky with hidden select.
+   Let's Un-hide it and style it minimally.
+*/
+.currency-selector select {
+  position: static;
+  opacity: 1;
+  color: white;
+  appearance: none; /* remove default arrow */
+  -webkit-appearance: none;
+}
+
+/* Token Icon */
+.token-icon,
+.token-icon-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.token-icon-placeholder {
+  background: #6366f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.balance-info {
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding-right: 0.5rem;
+}
+
+/* Swap Divider */
+.swap-divider {
+  display: flex;
+  justify-content: center;
+  margin: -1rem 0;
+  z-index: 5;
+}
+
+.switch-btn {
+  background: #27272a;
+  border: 4px solid var(--bg-color); /* fake spacing */
+  color: var(--text-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  font-size: 1.2rem;
+}
+
+.switch-btn:hover {
+  transform: rotate(180deg);
+  background: #3f3f46;
+}
+
+/* Exchange Rate Info */
+.exchange-rate-info {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  height: 1.2rem;
+}
+
+/* Submit Button */
+.swap-submit-btn {
+  background: var(--accent-gradient);
+  border: none;
+  border-radius: 16px;
+  padding: 1.2rem;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.swap-submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.swap-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.swap-submit-btn:disabled {
+  background: #3f3f46;
+  color: #71717a;
+  cursor: not-allowed;
+}
+
+.swap-submit-btn.loading {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* Toast */
+.success-toast {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(74, 222, 128, 0.9);
+  color: #064e3b;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  animation: slideUp 0.3s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    bottom: -80px;
+  }
+  to {
+    opacity: 1;
+    bottom: -60px;
+  }
+}
+
+/* Loading/Error */
+.loading-spinner,
+.error-message {
+  text-align: center;
+  color: white;
+}

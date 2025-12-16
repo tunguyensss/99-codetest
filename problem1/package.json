@@ -1,0 +1,17 @@
+{
+  "name": "problem1",
+  "version": "1.0.0",
+  "description": "Sum to n implementation",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.1"
+  }
+}

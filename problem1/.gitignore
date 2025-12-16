@@ -1,0 +1,13 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+build
+*.js
+!index.js
+!test.js
+
+# Misc
+.DS_Store
+.env
