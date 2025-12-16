@@ -1,73 +1,118 @@
-# React + TypeScript + Vite
+# Problem 3: Messy React Code
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Issues Found
 
-Currently, two official plugins are available:
+1.  **Logical Error in Filter Implementation**:
+    In the `filter` callback, `lhsPriority` is used but it is not defined. The variable `balancePriority` is defined but ignored. This would cause a crash or `ReferenceError` at runtime.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+    ```typescript
+    const balancePriority = getPriority(balance.blockchain);
+    if (lhsPriority > -99) {
+      // lhsPriority is undefined
+      // ...
+    }
+    ```
 
-## React Compiler
+2.  **Incorrect Filtering Logic**:
+    The code returns `true` if `balance.amount <= 0`. This means it _keeps_ empty or negative balances and _discards_ positive balances (assuming the `if` block is the only way to return true). Typically, a wallet page should show assets with `amount > 0`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+3.  **Redundant re-calculation in `map`**:
+    `sortedBalances` is mapped to `formattedBalances`, but then `rows` maps over `sortedBalances` again. The `formatted` property is added in `formattedBalances` but never used from that array. Instead, the code tries to access `balance.formatted` inside the `rows` map, where `balance` comes from `sortedBalances`, so it shouldn't even have the `formatted` property. This is a type safety issue and logic error.
 
-## Expanding the ESLint configuration
+4.  **Inefficient Sorting**:
+    The comparators in the `sort` function do not handle the case where `leftPriority === rightPriority`. This effectively returns `undefined` (or 0 implicitly in some JS engines, but TypeScript might complain if the return type isn't compatible with `number`), leading to unstable sorting behavior.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+5.  **Unnecessary Dependency in `useMemo`**:
+    The `prices` array is included in the `useMemo` dependency array for `sortedBalances`, but `sortedBalances` logic (filtering and sorting by priority) does not use `prices`. This causes the expensive sort/filter operation to re-run whenever `prices` update, which is often frequent in crypto apps.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+6.  **Use of `any`**:
+    The `blockchain` parameter in `getPriority` uses `any`. It should use a string literal type or enum to ensure type safety.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+7.  **Anti-pattern: Using index as key**:
+    `key={index}` is used in React lists. If the list items are reordered (which they are, via sorting), using index as a key can cause rendering bugs and performance issues. It should use a unique ID from the data (e.g., `balance.currency`).
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+8.  **Heavy Component**:
+    The formatting logic and mapping are done inside the render body. While `useMemo` is used for sorting, the mapping to `formattedBalances` and then to `rows` happens on every render.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Refactored Code
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```tsx
+import React, { useMemo } from "react";
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+// Added Constants to avoid hardcoding strings
+
+interface Props extends BoxProps {}
+
+const BLOCKCHAIN = {
+  OSMOSIS: "Osmosis",
+  ETHEREUM: "Ethereum",
+  ARBITRUM: "Arbitrum",
+  ZILLIQA: "Zilliqa",
+  NEO: "Neo",
+} as const;
+
+type Blockchain = (typeof BLOCKCHAIN)[keyof typeof BLOCKCHAIN] | string;
+
+interface WalletBalance {
+  currency: string;
+  amount: number;
+  blockchain: Blockchain;
+}
+
+interface Props extends BoxProps {}
+
+const WalletPage: React.FC<Props> = (props: Props) => {
+  const { children, ...rest } = props;
+  const balances = useWalletBalances();
+  const prices = usePrices();
+
+  const getPriority = (blockchain: Blockchain): number => {
+    switch (blockchain) {
+      case BLOCKCHAIN.OSMOSIS:
+        return 100;
+      case BLOCKCHAIN.ETHEREUM:
+        return 50;
+      case BLOCKCHAIN.ARBITRUM:
+        return 30;
+      case BLOCKCHAIN.ZILLIQA:
+        return 20;
+      case BLOCKCHAIN.NEO:
+        return 20;
+      default:
+        return -99;
+    }
+  };
+
+  const sortedBalances = useMemo(() => {
+    return balances
+      .filter((balance: WalletBalance) => {
+        const balancePriority = getPriority(balance.blockchain);
+        return balancePriority > -99 && balance.amount > 0;
+      })
+      .sort((lhs: WalletBalance, rhs: WalletBalance) => {
+        const leftPriority = getPriority(lhs.blockchain);
+        const rightPriority = getPriority(rhs.blockchain);
+        if (leftPriority > rightPriority) return -1;
+        if (rightPriority > leftPriority) return 1;
+        return 0;
+      });
+  }, [balances]);
+
+  const rows = sortedBalances.map((balance: WalletBalance) => {
+    const usdValue = prices[balance.currency] * balance.amount;
+    const formattedAmount = balance.amount.toFixed();
+
+    return (
+      <WalletRow
+        className={classes.row}
+        key={balance.currency}
+        amount={balance.amount}
+        usdValue={usdValue}
+        formattedAmount={formattedAmount}
+      />
+    );
+  });
+
+  return <div {...rest}>{rows}</div>;
+};
 ```

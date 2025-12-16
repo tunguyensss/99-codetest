@@ -48,9 +48,6 @@ const CurrencySwapForm: React.FC = () => {
   const exchangeRates = useMemo<ExchangeRate>(() => {
     const rates: ExchangeRate = {};
     prices.forEach((p) => {
-      // Assuming the latest price is what we want, but the API returns multiple.
-      // The verification step says "not every token has a price".
-      // We'll just take the first one found or overwrite. Ideally we might want the latest date.
       rates[p.currency] = p.price;
     });
     return rates;
@@ -87,7 +84,7 @@ const CurrencySwapForm: React.FC = () => {
         )} ${toCurrency}`
       );
       setAmount("");
-      setTimeout(() => setSwapResult(null), 3000); // Clear message after 3s
+      setTimeout(() => setSwapResult(null), 3000);
     }, 1500);
   };
 
