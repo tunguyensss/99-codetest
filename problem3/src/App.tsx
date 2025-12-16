@@ -125,28 +125,30 @@ const WalletPage: React.FC<BoxProps> = (props: BoxProps) => {
       });
   }, [balances]);
 
-  const formattedBalances: FormattedWalletBalance[] = sortedBalances.map(
-    (balance: WalletBalance) => {
+  const formattedBalances: FormattedWalletBalance[] = useMemo(() => {
+    return sortedBalances.map((balance: WalletBalance) => {
       return {
         ...balance,
         formatted: balance.amount.toFixed(2),
       };
-    }
-  );
+    });
+  }, [sortedBalances]);
 
-  const rows = formattedBalances.map((balance: FormattedWalletBalance) => {
-    const usdValue = (prices[balance.currency] || 0) * balance.amount;
-    return (
-      <WalletRow
-        className="wallet-row-item"
-        key={balance.currency}
-        currency={balance.currency}
-        amount={balance.amount}
-        usdValue={usdValue}
-        formattedAmount={balance.formatted}
-      />
-    );
-  });
+  const rows = useMemo(() => {
+    return formattedBalances.map((balance: FormattedWalletBalance) => {
+      const usdValue = (prices[balance.currency] || 0) * balance.amount;
+      return (
+        <WalletRow
+          className="wallet-row-item"
+          key={balance.currency}
+          currency={balance.currency}
+          amount={balance.amount}
+          usdValue={usdValue}
+          formattedAmount={balance.formatted}
+        />
+      );
+    });
+  }, [formattedBalances, prices]);
 
   return (
     <div {...rest} className="wallet-page">
