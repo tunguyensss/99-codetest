@@ -29,3 +29,7 @@ Provide 3 unique implementations of the following function in TypeScript.
    ```bash
    npm start
    ```
+
+## Result
+
+![Result](./docs/result-problem-1.png)
